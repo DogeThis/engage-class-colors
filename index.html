@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Engage class colors</title>
-<meta name="description" content="The class colors of every Fire Emblem Engage character: four mask colors each, as hex codes.">
+<meta name="description" content="The class colors of every playable Fire Emblem Engage character: four mask colors each, as hex codes.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2a14 14 0 0 0 0 28z' fill='%23142878'/%3E%3Cpath d='M16 2a14 14 0 0 1 0 28z' fill='%23CC2430'/%3E%3C/svg%3E">
 <style>
 @font-face {
@@ -32,14 +32,32 @@
     --code: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
+/* The dark theme applies when the system asks for dark, unless the reader chose
+   light with the header button, and whenever the reader chose dark. The button
+   sets `data-theme` on <html>. These two blocks must stay identical; a test
+   checks that they do. */
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
         --ground: #1f1f21;
         --ink: #ededee;
         --ink-soft: #a3a3ab;
         --line: rgba(255, 255, 255, 0.17);
         --swatch-edge: rgba(255, 255, 255, 0.18);
     }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #1f1f21;
+    --ink: #ededee;
+    --ink-soft: #a3a3ab;
+    --line: rgba(255, 255, 255, 0.17);
+    --swatch-edge: rgba(255, 255, 255, 0.18);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
 }
 
 *,
@@ -69,13 +87,50 @@ main {
     padding: 0 1.5rem 4rem;
 }
 
+header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 2.5rem 0 0.75rem;
+}
+
 h1 {
     margin: 0;
-    padding: 2.5rem 0 0.75rem;
     font-size: 2.75rem;
     font-weight: 500;
     line-height: 1.1;
     letter-spacing: -0.01em;
+}
+
+/* Light/dark override: a bare icon, sized as a comfortable target. The negative
+   margin lines the icon's edge up with the table's right edge. */
+.theme {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0 -0.5625rem 0.2rem 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.theme[hidden] {
+    display: none;
+}
+
+.theme:hover {
+    color: var(--ink);
+}
+
+.theme:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
 }
 
 table {
@@ -165,8 +220,11 @@ tbody th {
         padding: 0 1rem 3rem;
     }
 
-    h1 {
+    header {
         padding-top: 1.5rem;
+    }
+
+    h1 {
         font-size: 2.125rem;
     }
 
@@ -214,10 +272,59 @@ tbody th {
     }
 }
 </style>
+<script>
+// The page's only script: the header button that overrides the system's light
+// or dark setting. The choice is remembered. Choosing what the system already
+// asks for clears it, so the page follows the system again.
+(function () {
+    var KEY = "engage-class-colors-theme";
+    var root = document.documentElement;
+    var systemDark = matchMedia("(prefers-color-scheme: dark)");
+
+    function apply(theme) {
+        if (theme) root.setAttribute("data-theme", theme);
+        else root.removeAttribute("data-theme");
+    }
+    // Storage can be unavailable (private windows, some file:// pages). The
+    // button still works then; the choice just lasts until the page reloads.
+    function saved() {
+        try { return localStorage.getItem(KEY); } catch (e) { return null; }
+    }
+    function save(theme) {
+        try {
+            if (theme) localStorage.setItem(KEY, theme);
+            else localStorage.removeItem(KEY);
+        } catch (e) {}
+    }
+
+    // Runs before the first paint, so a remembered choice never flashes the other theme.
+    var remembered = saved();
+    if (remembered === "light" || remembered === "dark") apply(remembered);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var button = document.getElementById("theme");
+        button.hidden = false;
+        button.addEventListener("click", function () {
+            var system = systemDark.matches ? "dark" : "light";
+            var shown = root.getAttribute("data-theme") || system;
+            var next = shown === "dark" ? "light" : "dark";
+            var override = next === system ? null : next;
+            apply(override);
+            save(override);
+        });
+    });
+})();
+</script>
 </head>
 <body>
 <main>
+<header>
 <h1>Engage class colors</h1>
+<!-- Hidden until the script above takes it over, so it is never a dead control. -->
+<button class="theme" id="theme" type="button" hidden aria-label="Switch between light and dark" title="Switch between light and dark">
+<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1a7 7 0 0 1 0 14z" fill="currentColor"/></svg>
+</button>
+</header>
 <!-- The explicit roles keep this a table for screen readers on narrow screens,
      where the stylesheet restacks each row as a grid. -->
 <table role="table">
@@ -245,14 +352,10 @@ tbody th {
 <tr role="row"><th role="rowheader" scope="row">Clanne</th><td role="cell" class="id">MPID_Clan</td><td role="cell" class="chip" style="background-color:#D1B8AB">#D1B8AB</td><td role="cell" class="chip light" style="background-color:#2C6E68">#2C6E68</td><td role="cell" class="chip" style="background-color:#7B7988">#7B7988</td><td role="cell" class="chip" style="background-color:#B9AC96">#B9AC96</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Diamant</th><td role="cell" class="id">MPID_Diamand</td><td role="cell" class="chip light" style="background-color:#7A2A2B">#7A2A2B</td><td role="cell" class="chip" style="background-color:#B3A092">#B3A092</td><td role="cell" class="chip" style="background-color:#DE3737">#DE3737</td><td role="cell" class="chip light" style="background-color:#4D3C31">#4D3C31</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Etie</th><td role="cell" class="id">MPID_Etie</td><td role="cell" class="chip" style="background-color:#E2EB90">#E2EB90</td><td role="cell" class="chip" style="background-color:#FFAA68">#FFAA68</td><td role="cell" class="chip" style="background-color:#FEF2D2">#FEF2D2</td><td role="cell" class="chip" style="background-color:#D2D2D2">#D2D2D2</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Ève</th><td role="cell" class="id">MPID_Eve</td><td role="cell" class="chip" style="background-color:#F5FDFF">#F5FDFF</td><td role="cell" class="chip" style="background-color:#9FD05D">#9FD05D</td><td role="cell" class="chip light" style="background-color:#394960">#394960</td><td role="cell" class="chip" style="background-color:#D4FFE9">#D4FFE9</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Fogado</th><td role="cell" class="id">MPID_Fogato</td><td role="cell" class="chip" style="background-color:#E5371D">#E5371D</td><td role="cell" class="chip" style="background-color:#EDEDED">#EDEDED</td><td role="cell" class="chip light" style="background-color:#471E65">#471E65</td><td role="cell" class="chip" style="background-color:#FFD02D">#FFD02D</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Framme</th><td role="cell" class="id">MPID_Fram</td><td role="cell" class="chip" style="background-color:#C29E84">#C29E84</td><td role="cell" class="chip light" style="background-color:#CF236C">#CF236C</td><td role="cell" class="chip light" style="background-color:#1E1B2C">#1E1B2C</td><td role="cell" class="chip" style="background-color:#7A788A">#7A788A</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Goldmary</th><td role="cell" class="id">MPID_Goldmary</td><td role="cell" class="chip" style="background-color:#FFCF68">#FFCF68</td><td role="cell" class="chip" style="background-color:#FAFAFA">#FAFAFA</td><td role="cell" class="chip light" style="background-color:#472B1A">#472B1A</td><td role="cell" class="chip" style="background-color:#E2E2E4">#E2E2E4</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Gregory</th><td role="cell" class="id">MPID_Gregory</td><td role="cell" class="chip" style="background-color:#E4E4E4">#E4E4E4</td><td role="cell" class="chip light" style="background-color:#27242C">#27242C</td><td role="cell" class="chip" style="background-color:#EAC581">#EAC581</td><td role="cell" class="chip light" style="background-color:#464935">#464935</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Griss</th><td role="cell" class="id">MPID_Gris</td><td role="cell" class="chip" style="background-color:#837B64">#837B64</td><td role="cell" class="chip light" style="background-color:#27242C">#27242C</td><td role="cell" class="chip light" style="background-color:#903C5E">#903C5E</td><td role="cell" class="chip light" style="background-color:#474A37">#474A37</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Hortensia</th><td role="cell" class="id">MPID_Hortensia</td><td role="cell" class="chip light" style="background-color:#1A1B55">#1A1B55</td><td role="cell" class="chip" style="background-color:#5BC3F1">#5BC3F1</td><td role="cell" class="chip" style="background-color:#DE2C68">#DE2C68</td><td role="cell" class="chip" style="background-color:#F0F0F0">#F0F0F0</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Hyacinth</th><td role="cell" class="id">MPID_Hyacinth</td><td role="cell" class="chip light" style="background-color:#151515">#151515</td><td role="cell" class="chip light" style="background-color:#396649">#396649</td><td role="cell" class="chip" style="background-color:#E4E4E4">#E4E4E4</td><td role="cell" class="chip light" style="background-color:#870076">#870076</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Ivy</th><td role="cell" class="id">MPID_Ivy</td><td role="cell" class="chip light" style="background-color:#161760">#161760</td><td role="cell" class="chip light" style="background-color:#D93069">#D93069</td><td role="cell" class="chip light" style="background-color:#2A2A2A">#2A2A2A</td><td role="cell" class="chip light" style="background-color:#020323">#020323</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Jade</th><td role="cell" class="id">MPID_Jade</td><td role="cell" class="chip light" style="background-color:#385660">#385660</td><td role="cell" class="chip" style="background-color:#CEB470">#CEB470</td><td role="cell" class="chip light" style="background-color:#AE352B">#AE352B</td><td role="cell" class="chip" style="background-color:#DFDFE6">#DFDFE6</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Jean</th><td role="cell" class="id">MPID_Jean</td><td role="cell" class="chip" style="background-color:#8D9A5F">#8D9A5F</td><td role="cell" class="chip light" style="background-color:#404262">#404262</td><td role="cell" class="chip" style="background-color:#D1B8AA">#D1B8AA</td><td role="cell" class="chip" style="background-color:#C5BDBC">#C5BDBC</td></tr>
@@ -260,28 +363,18 @@ tbody th {
 <tr role="row"><th role="rowheader" scope="row">Lapis</th><td role="cell" class="id">MPID_Lapis</td><td role="cell" class="chip" style="background-color:#D83C3C">#D83C3C</td><td role="cell" class="chip" style="background-color:#F0F0F0">#F0F0F0</td><td role="cell" class="chip" style="background-color:#F8F0A3">#F8F0A3</td><td role="cell" class="chip light" style="background-color:#AB2626">#AB2626</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Lindon</th><td role="cell" class="id">MPID_Linden</td><td role="cell" class="chip" style="background-color:#F8EEE0">#F8EEE0</td><td role="cell" class="chip light" style="background-color:#393924">#393924</td><td role="cell" class="chip" style="background-color:#F1CE76">#F1CE76</td><td role="cell" class="chip" style="background-color:#FAFAFA">#FAFAFA</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Louis</th><td role="cell" class="id">MPID_Louis</td><td role="cell" class="chip light" style="background-color:#36351C">#36351C</td><td role="cell" class="chip" style="background-color:#F7D686">#F7D686</td><td role="cell" class="chip" style="background-color:#4A856B">#4A856B</td><td role="cell" class="chip" style="background-color:#FFFDF0">#FFFDF0</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Lumera</th><td role="cell" class="id">MPID_Lumiere</td><td role="cell" class="chip" style="background-color:#FEFEFF">#FEFEFF</td><td role="cell" class="chip" style="background-color:#AEBB88">#AEBB88</td><td role="cell" class="chip" style="background-color:#88982E">#88982E</td><td role="cell" class="chip" style="background-color:#F1CC67">#F1CC67</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Madeline</th><td role="cell" class="id">MPID_Madeline</td><td role="cell" class="chip light" style="background-color:#1E3C71">#1E3C71</td><td role="cell" class="chip" style="background-color:#EAFCFB">#EAFCFB</td><td role="cell" class="chip light" style="background-color:#293444">#293444</td><td role="cell" class="chip" style="background-color:#43AFCD">#43AFCD</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Marni</th><td role="cell" class="id">MPID_Marron</td><td role="cell" class="chip" style="background-color:#EEFDFB">#EEFDFB</td><td role="cell" class="chip light" style="background-color:#741C33">#741C33</td><td role="cell" class="chip light" style="background-color:#26243D">#26243D</td><td role="cell" class="chip" style="background-color:#C0517E">#C0517E</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Mauvier</th><td role="cell" class="id">MPID_Mauve</td><td role="cell" class="chip" style="background-color:#FBEAEA">#FBEAEA</td><td role="cell" class="chip light" style="background-color:#3E3876">#3E3876</td><td role="cell" class="chip light" style="background-color:#473D40">#473D40</td><td role="cell" class="chip" style="background-color:#D6D4E4">#D6D4E4</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Merrin</th><td role="cell" class="id">MPID_Merin</td><td role="cell" class="chip light" style="background-color:#4C1C66">#4C1C66</td><td role="cell" class="chip light" style="background-color:#2A53D3">#2A53D3</td><td role="cell" class="chip light" style="background-color:#04060A">#04060A</td><td role="cell" class="chip" style="background-color:#EDEDED">#EDEDED</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Morion</th><td role="cell" class="id">MPID_Morion</td><td role="cell" class="chip light" style="background-color:#7D2318">#7D2318</td><td role="cell" class="chip" style="background-color:#9F885E">#9F885E</td><td role="cell" class="chip light" style="background-color:#3E3676">#3E3676</td><td role="cell" class="chip light" style="background-color:#42424E">#42424E</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Nel</th><td role="cell" class="id">MPID_El</td><td role="cell" class="chip" style="background-color:#5A9DBA">#5A9DBA</td><td role="cell" class="chip" style="background-color:#F3F2F2">#F3F2F2</td><td role="cell" class="chip light" style="background-color:#32292A">#32292A</td><td role="cell" class="chip" style="background-color:#D9C8A0">#D9C8A0</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Nil</th><td role="cell" class="id">MPID_Il</td><td role="cell" class="chip" style="background-color:#BA5A84">#BA5A84</td><td role="cell" class="chip" style="background-color:#F3F2F2">#F3F2F2</td><td role="cell" class="chip light" style="background-color:#32292A">#32292A</td><td role="cell" class="chip" style="background-color:#D9C8A0">#D9C8A0</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Pandreo</th><td role="cell" class="id">MPID_Pandoro</td><td role="cell" class="chip" style="background-color:#E0E0E7">#E0E0E7</td><td role="cell" class="chip" style="background-color:#F02100">#F02100</td><td role="cell" class="chip light" style="background-color:#365662">#365662</td><td role="cell" class="chip" style="background-color:#F6D381">#F6D381</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Panette</th><td role="cell" class="id">MPID_Panetone</td><td role="cell" class="chip light" style="background-color:#282945">#282945</td><td role="cell" class="chip" style="background-color:#0E8997">#0E8997</td><td role="cell" class="chip" style="background-color:#E2E1E6">#E2E1E6</td><td role="cell" class="chip light" style="background-color:#040409">#040409</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Rafal</th><td role="cell" class="id">MPID_Rafale</td><td role="cell" class="chip" style="background-color:#BA5A84">#BA5A84</td><td role="cell" class="chip" style="background-color:#F3F2F2">#F3F2F2</td><td role="cell" class="chip light" style="background-color:#32292A">#32292A</td><td role="cell" class="chip" style="background-color:#D9C8A0">#D9C8A0</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Rosado</th><td role="cell" class="id">MPID_Rosado</td><td role="cell" class="chip light" style="background-color:#61518C">#61518C</td><td role="cell" class="chip" style="background-color:#DE7A86">#DE7A86</td><td role="cell" class="chip light" style="background-color:#211815">#211815</td><td role="cell" class="chip" style="background-color:#E2E2E4">#E2E2E4</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Saphir</th><td role="cell" class="id">MPID_Saphir</td><td role="cell" class="chip light" style="background-color:#2A4760">#2A4760</td><td role="cell" class="chip light" style="background-color:#721A12">#721A12</td><td role="cell" class="chip light" style="background-color:#2E1E1E">#2E1E1E</td><td role="cell" class="chip" style="background-color:#ADADCA">#ADADCA</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Seadall</th><td role="cell" class="id">MPID_Seadas</td><td role="cell" class="chip light" style="background-color:#681E12">#681E12</td><td role="cell" class="chip" style="background-color:#EA9551">#EA9551</td><td role="cell" class="chip light" style="background-color:#383838">#383838</td><td role="cell" class="chip" style="background-color:#C9B686">#C9B686</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Seforia</th><td role="cell" class="id">MPID_Sfoglia</td><td role="cell" class="chip" style="background-color:#FFFBD8">#FFFBD8</td><td role="cell" class="chip" style="background-color:#CF6F00">#CF6F00</td><td role="cell" class="chip light" style="background-color:#242424">#242424</td><td role="cell" class="chip light" style="background-color:#447886">#447886</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Timerra</th><td role="cell" class="id">MPID_Misutira</td><td role="cell" class="chip" style="background-color:#EDEDED">#EDEDED</td><td role="cell" class="chip" style="background-color:#E56FA5">#E56FA5</td><td role="cell" class="chip light" style="background-color:#141414">#141414</td><td role="cell" class="chip" style="background-color:#96D3B6">#96D3B6</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Vander</th><td role="cell" class="id">MPID_Vandre</td><td role="cell" class="chip light" style="background-color:#33363A">#33363A</td><td role="cell" class="chip light" style="background-color:#2F46AA">#2F46AA</td><td role="cell" class="chip" style="background-color:#D9B35E">#D9B35E</td><td role="cell" class="chip" style="background-color:#E2E2E4">#E2E2E4</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Veyle</th><td role="cell" class="id">MPID_Veyre</td><td role="cell" class="chip" style="background-color:#F3EBE2">#F3EBE2</td><td role="cell" class="chip light" style="background-color:#2C2828">#2C2828</td><td role="cell" class="chip light" style="background-color:#B45376">#B45376</td><td role="cell" class="chip" style="background-color:#F3EBE2">#F3EBE2</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Yunaka</th><td role="cell" class="id">MPID_Yunaka</td><td role="cell" class="chip light" style="background-color:#443356">#443356</td><td role="cell" class="chip" style="background-color:#D645A8">#D645A8</td><td role="cell" class="chip light" style="background-color:#24182E">#24182E</td><td role="cell" class="chip" style="background-color:#D4B669">#D4B669</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Zelestia</th><td role="cell" class="id">MPID_Selestia</td><td role="cell" class="chip" style="background-color:#E3C01A">#E3C01A</td><td role="cell" class="chip light" style="background-color:#18648D">#18648D</td><td role="cell" class="chip light" style="background-color:#27242C">#27242C</td><td role="cell" class="chip light" style="background-color:#4E4A53">#4E4A53</td></tr>
 <tr role="row"><th role="rowheader" scope="row">Zelkov</th><td role="cell" class="id">MPID_Zelkova</td><td role="cell" class="chip light" style="background-color:#433B47">#433B47</td><td role="cell" class="chip light" style="background-color:#6C6479">#6C6479</td><td role="cell" class="chip light" style="background-color:#22202D">#22202D</td><td role="cell" class="chip light" style="background-color:#696576">#696576</td></tr>
-<tr role="row"><th role="rowheader" scope="row">Zephia</th><td role="cell" class="id">MPID_Sepia</td><td role="cell" class="chip light" style="background-color:#1A181E">#1A181E</td><td role="cell" class="chip light" style="background-color:#CF135F">#CF135F</td><td role="cell" class="chip" style="background-color:#E8C37F">#E8C37F</td><td role="cell" class="chip light" style="background-color:#291F36">#291F36</td></tr>
 </tbody>
 </table>
 </main>
